@@ -4,7 +4,7 @@
 @Author: jianh
 @Email: 595495856@qq.com
 @Date: 2019-12-25 17:15:02
-@LastEditTime: 2020-05-17 23:08:12
+@LastEditTime: 2020-06-01 21:34:45
 '''
 
 import torch
@@ -57,7 +57,6 @@ class BottleneckBlock(nn.Module):
         out = self.conv2(self.relu(self.norm2(out)))
         out = self.dropout(out)
         return torch.cat([x, out], 1)
-
 
 class TransitionBlock(nn.Module):
     """
