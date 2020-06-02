@@ -1,10 +1,10 @@
 '''
-@Descripttion:
+@Descripttion: 生成预测结果保存到.txt文件中
 @Version: 
 @Author: jianh
 @Email: 595495856@qq.com
 @Date: 2020-02-19 16:51:37
-@LastEditTime: 2020-04-22 15:00:59
+@LastEditTime: 2020-06-02 22:52:46
 '''
 
 import math

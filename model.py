@@ -4,7 +4,7 @@
 @Author: jianh
 @Email: 595495856@qq.com
 @Date: 2019-12-25 17:15:02
-@LastEditTime: 2020-06-01 21:34:45
+@LastEditTime: 2020-06-02 22:50:22
 '''
 
 import torch
@@ -235,10 +235,10 @@ class Encoder(nn.Module):
         out = self.relu(self.norm0(out))
         out = self.max_pool(out)
         out = self.block1(out)
-        # out = self.cabm1(out)
+        out = self.cabm1(out)
         out = self.trans1(out)
         out = self.block2(out)
-        # out = self.cabm2(out)
+        out = self.cabm2(out)
         out_before_trans2 = self.trans2_relu(self.trans2_norm(out))
         out_A = self.trans2_conv(out_before_trans2)
         out_A = self.trans2_pool(out_A)
