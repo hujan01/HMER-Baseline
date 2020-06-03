@@ -4,12 +4,12 @@
 @Author: jianh
 @Email: 595495856@qq.com
 @Date: 2019-12-16 16:00:16
-@LastEditTime: 2020-05-17 22:59:09
+@LastEditTime: 2020-06-03 23:05:46
 '''
 import math
 import random
 import os 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -56,7 +56,7 @@ def load_dict(dictFile):
     return lexicon
 
 exprate = 0 # 是否保存模型 
-best_wer = 0
+best_wer = 2**31
 # 字典
 worddicts = load_dict(cfg.dictionaries)
 worddicts_r = [None] * len(worddicts)
@@ -412,7 +412,7 @@ for epoch in range(cfg.num_epoch):
     print('wer is %.5f' % (wer))
     print('sacc is %.5f ' % (sacc)) # ExpRate
     # 保存模型
-    if (sacc > exprate):
+    if (wer < best_wer):
         exprate = sacc
         best_wer = wer
         print('currect ExpRate:{}'.format(exprate))

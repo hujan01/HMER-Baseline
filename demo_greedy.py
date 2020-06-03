@@ -4,7 +4,7 @@
 @Author: jianh
 @Email: 595495856@qq.com
 @Date: 2020-02-19 16:51:37
-@LastEditTime: 2020-04-22 15:22:22
+@LastEditTime: 2020-06-02 23:04:53
 '''
 
 import math 
@@ -78,7 +78,7 @@ decoder.eval()
 # 开始推断
 fw = open('result/result_.txt', 'w')
 
-testPath = "/home/hj/workspace/HMER/data/CROHME2016/test"
+testPath = "/home/hj/workspace/HMER/data/CROHME2016/valid"
 maxlen = 70
 
 imgFiles = os.listdir(testPath)
@@ -135,7 +135,6 @@ for imgName in imgFiles:
         # high = np.pad(high_alpha_img, ((high_pad_h, 0), (high_pad_w, 0)), 'constant', constant_values=(0,0))
         # attn = low+high
         # attn_img = cv2.addWeighted(img_show,0.5,attn.astype(np.uint8),0.5,0)
-    
         # cv2.imwrite('result/{}.png'.format(str(i)), attn_img)
         # print(worddicts_r[int(pred[i])])
 

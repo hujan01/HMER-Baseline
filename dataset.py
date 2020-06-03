@@ -4,7 +4,7 @@
 @Author: jianh
 @email: 595495856@qq.com
 @Date: 2020-02-19 16:51:51
-@LastEditTime: 2020-04-22 14:48:44
+@LastEditTime: 2020-06-03 23:02:12
 '''
 import sys
 
@@ -68,10 +68,10 @@ def MERData(feature_file, label_file, dictionary, batch_size, batch_Imagesize, m
 
         # 这里会剔除一些不符合条件的图片
         if len(lab) > maxlen: # 公式最大长度限制
-            print('{} label_len: {}'.format(uid, len(lab)))
+            # print('{} label_len: {}'.format(uid, len(lab)))
             continue
         elif size > maxImagesize: # 图像最大长度限制
-            print('{} size: {}'.format(uid, size))
+            # print('{} size: {}'.format(uid, size))
             continue
         else:
             uidList.append(uid) 
