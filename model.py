@@ -10,11 +10,12 @@
 import torch
 import torch.nn as nn
 
-# Number of bottlenecks
+# DenseNet params
 num_denseblock = 3
 depth = 16
 multi_block_depth = depth // 2
 growth_rate = 24
+
 
 n = 256
 n_prime = 512
