@@ -4,7 +4,7 @@
 @Author: jianh
 @Email: 595495856@qq.com
 @Date: 2020-02-19 16:51:37
-@LastEditTime: 2020-06-02 22:52:46
+@LastEditTime: 2020-06-10 17:14:19
 '''
 
 import math
@@ -24,7 +24,7 @@ from model import Encoder, Decoder
 from config import cfg
 
 torch.backends.cudnn.benchmark = False
-valid_datasets = ['test.pkl', 'data/test2016.txt']
+valid_datasets = ['train.pkl', 'data/train_caption.txt']
 dictionaries = 'data/dictionary.txt'
 Imagesize = 500000
 batch_size_t = 1
@@ -159,8 +159,8 @@ decoder = Decoder(112)
 encoder = encoder.cuda()
 decoder = decoder.cuda()
 
-encoder.load_state_dict(torch.load('checkpoints/encoder_36p93.pkl'))
-decoder.load_state_dict(torch.load('checkpoints/attn_decoder_36p93.pkl'))
+encoder.load_state_dict(torch.load('checkpoints/encoder_37p68.pkl'))
+decoder.load_state_dict(torch.load('checkpoints/attn_decoder_37p68.pkl'))
 
 encoder.eval()
 decoder.eval()

@@ -1,8 +1,8 @@
 '''
 @Author: your name
 @Date: 2020-01-06 15:08:07
-@LastEditTime : 2020-01-08 11:19:49
-@LastEditors  : Please set LastEditors
+@LastEditTime: 2020-06-10 23:02:56
+@LastEditors: Please set LastEditors
 @Description: In User Settings Edit
 @FilePath: /HMER/config.py
 '''

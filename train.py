@@ -4,7 +4,7 @@
 @Author: jianh
 @Email: 595495856@qq.com
 @Date: 2019-12-16 16:00:16
-@LastEditTime: 2020-06-03 23:05:46
+@LastEditTime: 2020-06-11 09:37:59
 '''
 import math
 import random
@@ -229,10 +229,10 @@ decoder = decoder.cuda()
 
 # 定义损失函数,优化器和学习率策略
 criterion = nn.CrossEntropyLoss().cuda()
-encoder_optimizer = optim.SGD(encoder.parameters(), lr=cfg.lr, momentum=0.9)
-decoder_optimizer = optim.SGD(decoder.parameters(), lr=cfg.lr, momentum=0.9)
-# encoder_optimizer = optim.Adadelta(encoder.parameters(), lr=cfg.lr, weight_decay=10e-4)
-# decoder_optimizer = optim.Adadelta(decoder.parameters(), lr=cfg.lr, weight_decay=10e-4)
+# encoder_optimizer = optim.SGD(encoder.parameters(), lr=cfg.lr, momentum=0.9)
+# decoder_optimizer = optim.SGD(decoder.parameters(), lr=cfg.lr, momentum=0.9)
+encoder_optimizer = optim.Adadelta(encoder.parameters(), lr=cfg.lr, weight_decay=10e-4)
+decoder_optimizer = optim.Adadelta(decoder.parameters(), lr=cfg.lr, weight_decay=10e-4)
 # scheduler_encoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [20, 40], gamma=0.1)
 # scheduler_decoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [20, 40], gamma=0.1)
 
@@ -417,12 +417,12 @@ for epoch in range(cfg.num_epoch):
         best_wer = wer
         print('currect ExpRate:{}'.format(exprate))
         print("saving the model....")
-        torch.save(encoder.state_dict(), 'checkpoints/encoder_.pkl')
-        torch.save(decoder.state_dict(), 'checkpoints/attn_decoder_.pkl')
+        torch.save(encoder.state_dict(), 'checkpoints/encoder_0001.pkl')
+        torch.save(decoder.state_dict(), 'checkpoints/attn_decoder_0001.pkl')
         print("done")
     else:
         print('the best is %f' % (exprate))
-        print('the best wer is {}'.format(wer))
+        # print('the best wer is {}'.format(wer))
         print('the loss is bigger than before,so do not save the model')
 
 

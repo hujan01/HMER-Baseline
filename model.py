@@ -4,7 +4,7 @@
 @Author: jianh
 @Email: 595495856@qq.com
 @Date: 2019-12-25 17:15:02
-@LastEditTime: 2020-06-02 22:50:22
+@LastEditTime: 2020-06-10 21:52:03
 '''
 
 import torch
@@ -40,7 +40,8 @@ class BottleneckBlock(nn.Module):
             dropout_rate (float, optional): Probability of dropout [Default: 0.2]
         """
         super(BottleneckBlock, self).__init__()
-        inter_size = num_denseblock * growth_rate  
+        # inter_size = num_denseblock * growth_rate  
+        inter_size = 4*growth_rate
         self.norm1 = nn.BatchNorm2d(input_size)
         self.relu = nn.ReLU(inplace=True)
         self.conv1 = nn.Conv2d(
@@ -213,7 +214,7 @@ class Encoder(nn.Module):
         )
         self.trans2_pool = nn.AvgPool2d(kernel_size=2, stride=2)
         self.multi_block = DenseBlock(
-            num_features,
+            num_features//2,
             growth_rate=growth_rate,
             depth=multi_block_depth,
             dropout_rate=dropout_rate,
@@ -239,12 +240,11 @@ class Encoder(nn.Module):
         out = self.trans1(out)
         out = self.block2(out)
         out = self.cabm2(out)
-        out_before_trans2 = self.trans2_relu(self.trans2_norm(out))
-        out_A = self.trans2_conv(out_before_trans2)
-        out_A = self.trans2_pool(out_A)
+        out_before_trans2 = self.trans2_relu(self.trans2_norm(out)) 
+        out_before_trans2 = self.trans2_conv(out_before_trans2)
+        out_A = self.trans2_pool(out_before_trans2)
         out_A = self.block3(out_A)
         out_B = self.multi_block(out_before_trans2)
-
         return out_A, out_B
 
 class CoverageAttention(nn.Module):
@@ -379,7 +379,7 @@ class Decoder(nn.Module):
         """
         super(Decoder, self).__init__()
 
-        context_size = 684+792  # 这里要更具encode的输出进行调整
+        context_size = 684+492  # 这里要根据encode的输出进行调整
         self.embedding = nn.Embedding(num_classes, embedding_dim)
         self.gru1 = nn.GRU(
             input_size=embedding_dim, hidden_size=hidden_size, batch_first=True#, bidirectional=True, num_layers=2
@@ -399,7 +399,7 @@ class Decoder(nn.Module):
             device=device,
         )
         self.coverage_attn_high = CoverageAttention(
-            792,
+            492,
             decoder_conv_filters,
             #attn_size=high_res_attn_size,
             kernel_size=(7, 7),
@@ -450,5 +450,5 @@ class Decoder(nn.Module):
         out = self.maxout(out)
         out = torch.matmul(self.W_o, out.t()).t()
         # return out, new_hidden.transpose(0, 1), low_attention, high_attention
-        return out, new_hidden.transpose(0, 1), low_attention
+        return out, new_hidden.transpose(0, 1), high_attention
 
