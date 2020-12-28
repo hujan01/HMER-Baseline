@@ -1,22 +1,21 @@
 '''
-@Descripttion: 多尺度模型, 在前两个block模块加上cbam模块
-@Version: 
-@Author: jianh
-@Email: 595495856@qq.com
-@Date: 2019-12-25 17:15:02
-@LastEditTime: 2020-06-10 21:52:03
+Author: sigmoid
+Description: 
+Email: 595495856@qq.com
+Date: 2020-12-18 13:04:36
+LastEditTime: 2020-12-28 15:48:46
 '''
-
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
-# DenseNet params
+# Encoder params
 num_denseblock = 3
 depth = 16
 multi_block_depth = depth // 2
 growth_rate = 24
 
-
+# Decoder params
 n = 256
 n_prime = 512
 decoder_conv_filters = 256
@@ -24,68 +23,6 @@ gru_hidden_size = 256
 embedding_dim = 256
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-class BottleneckBlock(nn.Module):
-    """
-    Dense Bottleneck Block
-
-    It contains two convolutional layers, a 1x1 and a 3x3.
-    """
-
-    def __init__(self, input_size, growth_rate, dropout_rate=0.2):
-        """
-        Args:
-            input_size (int): Number of channels of the input
-            growth_rate (int): Number of new features being added. That is the ouput
-                size of the last convolutional layer.
-            dropout_rate (float, optional): Probability of dropout [Default: 0.2]
-        """
-        super(BottleneckBlock, self).__init__()
-        # inter_size = num_denseblock * growth_rate  
-        inter_size = 4*growth_rate
-        self.norm1 = nn.BatchNorm2d(input_size)
-        self.relu = nn.ReLU(inplace=True)
-        self.conv1 = nn.Conv2d(
-            input_size, inter_size, kernel_size=1, stride=1, bias=False
-        )
-        self.norm2 = nn.BatchNorm2d(inter_size)
-        self.conv2 = nn.Conv2d(
-            inter_size, growth_rate, kernel_size=3, stride=1, padding=1, bias=False
-        )
-        self.dropout = nn.Dropout(dropout_rate)
-
-    def forward(self, x):
-        out = self.conv1(self.relu(self.norm1(x)))
-        out = self.conv2(self.relu(self.norm2(out)))
-        out = self.dropout(out)
-        return torch.cat([x, out], 1)
-
-class TransitionBlock(nn.Module):
-    """
-    Transition Block
-
-    A transition layer reduces the number of feature maps in-between two bottleneck
-    blocks.
-    """
-
-    def __init__(self, input_size, output_size):
-        """
-        Args:
-            input_size (int): Number of channels of the input
-            output_size (int): Number of channels of the output
-        """
-        super(TransitionBlock, self).__init__()
-        self.norm = nn.BatchNorm2d(input_size)
-        self.relu = nn.ReLU(inplace=True)
-        self.conv = nn.Conv2d(
-            input_size, output_size, kernel_size=1, stride=1, bias=False
-        )
-        self.pool = nn.AvgPool2d(kernel_size=2, stride=2)
-
-    def forward(self, x):
-        out = self.conv(self.relu(self.norm(x)))
-        return self.pool(out)
-
 class SpatialAttention(nn.Module):
     def __init__(self, kernel_size=7):
         super(SpatialAttention, self).__init__()
@@ -119,9 +56,9 @@ class ChannelAttention(nn.Module):
         maxout = self.sharedMLP(self.max_pool(x))
         return self.sigmoid(avgout + maxout)
         
-class Cabm(nn.Module):
+class Cbam(nn.Module):
     def __init__(self, planes):
-        super(Cabm, self).__init__()
+        super(Cbam, self).__init__()
         self.ca = ChannelAttention(planes)
         self.sa = SpatialAttention()
     def forward(self, x):
@@ -129,10 +66,68 @@ class Cabm(nn.Module):
         x = self.sa(x) * x 
         return x
 
+class BottleneckBlock(nn.Module):
+    """
+    Dense Bottleneck Block
+    It contains two convolutional layers, a 1x1 and a 3x3.
+    """
+
+    def __init__(self, input_size, growth_rate, dropout_rate=0.2):
+        """
+        Args:
+            input_size (int): Number of channels of the input
+            growth_rate (int): Number of new features being added. That is the ouput
+                size of the last convolutional layer.
+            dropout_rate (float, optional): Probability of dropout [Default: 0.2]
+        """
+        super(BottleneckBlock, self).__init__()
+        inter_size = 4*growth_rate
+
+        self.relu = nn.ReLU(inplace=True)
+        self.norm1 = nn.BatchNorm2d(inter_size)
+        self.conv1 = nn.Conv2d(
+            input_size, inter_size, kernel_size=1, stride=1, bias=False
+        )
+        self.norm2 = nn.BatchNorm2d(growth_rate)
+        self.conv2 = nn.Conv2d(
+            inter_size, growth_rate, kernel_size=3, stride=1, padding=1, bias=False
+        )
+        self.dropout = nn.Dropout(dropout_rate)
+
+    def forward(self, x):
+        out = self.norm1(self.relu(self.conv1(x)))
+        out = self.norm2(self.relu(self.conv2(out)))
+        out = self.dropout(out)
+        return torch.cat([x, out], 1)
+
+class TransitionBlock(nn.Module):
+    """
+    Transition Block
+    A transition layer reduces the number of feature maps in-between two bottleneck
+    blocks.
+    """
+
+    def __init__(self, input_size, output_size):
+        """
+        Args:
+            input_size (int): Number of channels of the input
+            output_size (int): Number of channels of the output
+        """
+        super(TransitionBlock, self).__init__()
+        self.norm = nn.BatchNorm2d(output_size)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv = nn.Conv2d(
+            input_size, output_size, kernel_size=1, stride=1, bias=False
+        )
+        self.pool = nn.AvgPool2d(kernel_size=2, stride=2)
+
+    def forward(self, x):
+        out = self.norm(self.relu(self.conv(x)))
+        return self.pool(out)
+ 
 class DenseBlock(nn.Module):
     """
     Dense block
-
     A dense block stacks several bottleneck blocks.
     """
 
@@ -196,7 +191,7 @@ class Encoder(nn.Module):
         )
 
         num_features = num_features + depth * growth_rate
-        self.cabm1 = Cabm(num_features)
+        self.cbam1 = Cbam(num_features)
         self.trans1 = TransitionBlock(num_features, num_features // 2)
         num_features = num_features // 2
         self.block2 = DenseBlock(
@@ -207,19 +202,8 @@ class Encoder(nn.Module):
         )
 
         num_features = num_features + depth * growth_rate
-        self.cabm2 = Cabm(num_features)
-        self.trans2_norm = nn.BatchNorm2d(num_features)
-        self.trans2_relu = nn.ReLU(inplace=True)
-        self.trans2_conv = nn.Conv2d(
-            num_features, num_features // 2, kernel_size=1, stride=1, bias=False
-        )
-        self.trans2_pool = nn.AvgPool2d(kernel_size=2, stride=2)
-        self.multi_block = DenseBlock(
-            num_features//2,
-            growth_rate=growth_rate,
-            depth=multi_block_depth,
-            dropout_rate=dropout_rate,
-        )
+        self.cbam2 = Cbam(num_features)
+        self.trans2 = TransitionBlock(num_features, num_features // 2)
 
         num_features = num_features // 2
         self.block3 = DenseBlock(
@@ -229,38 +213,28 @@ class Encoder(nn.Module):
             dropout_rate=dropout_rate,
         )
 
-        if checkpoint is not None:
-            self.load_state_dict(checkpoint)
-
     def forward(self, x):
         out = self.conv0(x)
         out = self.relu(self.norm0(out))
         out = self.max_pool(out)
         out = self.block1(out)
-        out = self.cabm1(out)
+        # out = self.cbam1(out)
         out = self.trans1(out)
         out = self.block2(out)
-        out = self.cabm2(out)
-        out_before_trans2 = self.trans2_relu(self.trans2_norm(out)) 
-        out_before_trans2 = self.trans2_conv(out_before_trans2)
-        out_A = self.trans2_pool(out_before_trans2)
-        out_A = self.block3(out_A)
-        out_B = self.multi_block(out_before_trans2)
-        return out_A, out_B
+        # out = self.cbam2(out)
+        out = self.trans2(out)
+        out = self.block3(out)
+        return out
 
 class CoverageAttention(nn.Module):
     """Coverage attention
     The coverage attention is a multi-layer perceptron, which takes encoded annotations
     and creates a context vector.
     """
-    # input_size = C
-    # output_size = q
-    # attn_size = L = H * W
     def __init__(
         self,
         input_size,
         output_size,
-        # attn_size,
         kernel_size,
         padding=0,
         device=device,
@@ -275,68 +249,65 @@ class CoverageAttention(nn.Module):
             device (torch.device, optional): Device for the tensors
         """
         super(CoverageAttention, self).__init__()
+        
         self.alpha = None
-        self.conv = nn.Conv2d(1, output_size, kernel_size=kernel_size, padding=padding) #same
-        self.U_a = nn.Parameter(torch.empty((n_prime, input_size)))
-        self.U_f = nn.Parameter(torch.empty((n_prime, output_size)))
-        self.nu_attn = nn.Parameter(torch.empty(n_prime))
         self.input_size = input_size
         self.output_size = output_size
-        # self.attn_size = attn_size
         self.device = device
-        nn.init.xavier_normal_(self.U_a)
-        nn.init.xavier_normal_(self.U_f)
-        # Xavier requires at least a 2D tensor.
-        nn.init.xavier_normal_(self.nu_attn.unsqueeze(0))
 
-    def reset_alpha(self, batch_size, attn_size):
-        self.alpha = torch.zeros((batch_size, 1, attn_size), device=self.device)
+        self.conv_Q = nn.Conv2d(1, output_size, kernel_size=kernel_size, padding=padding) # same
+        self.fc_Wa = nn.Linear(n, n_prime)
+        self.conv_Ua = nn.Conv2d(input_size, n_prime, kernel_size=1)
+        self.fc_Uf = nn.Linear(output_size, n_prime)
+        self.fc_Va = nn.Linear(n_prime, 1)
+        
+        # init
+        nn.init.xavier_normal_(self.fc_Wa.weight)
+        nn.init.xavier_normal_(self.fc_Va.weight)
+        nn.init.xavier_normal_(self.fc_Uf.weight)
 
-    def forward(self, x, u_pred): #fcatt(A, s_hat_t)
-        batch_size = x.size(0) # x (bs,c,h,w)
+    def reset_alpha(self, bs, attn_size): 
+        """
+        Args:
+            attn_size: H*W (feature map size)
+        """
+        self.alpha = torch.zeros((bs, 1, attn_size), device=self.device)
+
+    def forward(self, x, st_hat): 
+        bs = x.size(0) # x (bs, c, h, w)
+
         if self.alpha is None:
-            self.reset_alpha(batch_size, x.size(2)*x.size(3))
-        # Change the dimensions to make it possible to apply a 2D convolution
-        # From: (batch_size x L)
-        # To: (batch_size x H x W)
-        alpha_sum = self.alpha.sum(1).view(batch_size, x.size(2), x.size(3)) 
-        conv_out = self.conv(alpha_sum.unsqueeze(1))  # calc F
-        # Change dimensions back
-        # From: (batch_size x output_size x H x W)
-        # To: (batch_size x output_size x L)
-        conv_out = conv_out.view(batch_size, self.output_size, -1)
-        # Change the dimensions
-        # From: (batch_size x C x H x W)
-        # To: (batch_size x C x L)
-        a = x.view(batch_size, x.size(1), -1)
-        u_a = torch.matmul(self.U_a, a)
-        u_f = torch.matmul(self.U_f, conv_out)
-        # u_pred is expanded from (batch_size x n_prime)
-        # to (batch_size x n_prime x L) because there are L components to which
-        # the same u_pred is added.
-        u_pred_expanded = u_pred.unsqueeze(2).expand_as(u_a) 
-        tan_res = torch.tanh(u_pred_expanded + u_a + u_f)  
-        e_t = torch.matmul(self.nu_attn, tan_res)  # vatt
-        # alpha_t = torch.softmax(e_t, dim=1)
-        alpha_t = torch.zeros((batch_size, x.size(2)*x.size(3)), device=self.device)
+            self.reset_alpha(bs, x.size(2)*x.size(3))
+            
+        beta = self.alpha.sum(1)
+        beta = beta.view(bs, x.size(2), x.size(3)) # 当前时间步之前的alpha累加 (bs, attn_size)
+
+        F = self.conv_Q(beta.unsqueeze(1)) # (bs, output_size, h, w)
+        F = F.permute(2, 3, 0, 1) # (h, w, bs, output_size)
+        cover = self.fc_Uf(F) # (h, w, bs, n_prime)
+        key = self.conv_Ua(x).permute(2, 3, 0, 1) # (h, w, bs, n_prime)
+        query = self.fc_Wa(st_hat).squeeze(1) #(bs, n_prime)
+          
+        attention_score = torch.tanh(key + query[None, None, :, :] + cover)
+
+        e_t = self.fc_Va(attention_score).squeeze(3) # (h, w, bs)
+        e_t = e_t.permute(2, 0, 1).view(bs, -1) # (bs, h*w)
         e_t_exp = torch.exp(e_t)
         e_t_sum = e_t_exp.sum(1)
-        for i in range(batch_size):
+        alpha_t = torch.zeros((bs, x.size(2)*x.size(3)), device=self.device) # (bs, attn_size)
+        for i in range(bs):
             e_t_div = e_t_exp[i]/(e_t_sum[i]+1e-8)
             alpha_t[i] = e_t_div
         self.alpha = torch.cat((self.alpha, alpha_t.unsqueeze(1)), dim=1)
-        # alpha_t: (batch_size x L)
-        # a: (batch_size x C x L) but need (C x batch_size x L) for
-        # element-wise multiplication. So transpose them.
-        cA_t_L = alpha_t * a.transpose(0, 1)
-        # Transpose back
-        return cA_t_L.transpose(0, 1).sum(2), alpha_t.view(batch_size, 1, x.size(2), x.size(3))
-
+        gt = alpha_t * x.view(bs, x.size(1), -1).transpose(0, 1) # x(bs, c, attn_size)->x(c, bs, attn_size)
+        return gt.transpose(0, 1).sum(2), alpha_t.view(bs, 1, x.size(2), x.size(3))
+    
 class Maxout(nn.Module):
     """
     Maxout makes pools from the last dimension and keeps only the maximum value from
     each pool.
     """
+
     def __init__(self, pool_size):
         """
         Args:
@@ -356,11 +327,10 @@ class Decoder(nn.Module):
     GRU based Decoder which attends to the low- and high-resolution annotations to
     create a LaTeX string.
     """
+
     def __init__(
         self,
         num_classes,
-        #low_res_shape,
-        #high_res_shape,
         hidden_size=256,
         embedding_dim=256,
         checkpoint=None,
@@ -380,76 +350,54 @@ class Decoder(nn.Module):
         """
         super(Decoder, self).__init__()
 
-        context_size = 684+492  # 这里要根据encode的输出进行调整
+        context_size = 684 
         self.embedding = nn.Embedding(num_classes, embedding_dim)
         self.gru1 = nn.GRU(
-            input_size=embedding_dim, hidden_size=hidden_size, batch_first=True#, bidirectional=True, num_layers=2
+            input_size=embedding_dim, hidden_size=hidden_size, batch_first=True
         )
         self.gru2 = nn.GRU(
             input_size=context_size, hidden_size=hidden_size, batch_first=True
         )
-        # L = H * W
-        #low_res_attn_size = low_res_shape[1] * low_res_shape[2]
-        #high_res_attn_size = high_res_shape[1] * high_res_shape[2]
-        self.coverage_attn_low = CoverageAttention(
-            684,
+        self.coverage_attn = CoverageAttention(
+            context_size,
             decoder_conv_filters,
-            #attn_size=low_res_attn_size,
             kernel_size=(11, 11),
             padding=5,
             device=device,
         )
-        self.coverage_attn_high = CoverageAttention(
-            492,
-            decoder_conv_filters,
-            #attn_size=high_res_attn_size,
-            kernel_size=(7, 7),
-            padding=3,
-            device=device,
-        )
-        self.W_o = nn.Parameter(torch.empty((num_classes, embedding_dim // 2)))
-        self.W_s = nn.Parameter(torch.empty((embedding_dim, hidden_size)))
-        self.W_c = nn.Parameter(torch.empty((embedding_dim, context_size)))
-        self.U_pred = nn.Parameter(torch.empty((n_prime, n)))
+        self.fc_Wo = nn.Linear(embedding_dim//2, num_classes)
+        self.fc_Ws = nn.Linear(hidden_size, embedding_dim)
+        self.fc_Wc = nn.Linear(context_size, embedding_dim)
+
         self.maxout = Maxout(2)
         self.hidden_size = hidden_size
-        # 初始化
-        nn.init.xavier_normal_(self.W_o)
-        nn.init.xavier_normal_(self.W_s)
-        nn.init.xavier_normal_(self.W_c)
-        nn.init.xavier_normal_(self.U_pred)
-        # 加载权重
-        if checkpoint is not None:
-            self.load_state_dict(checkpoint)
+        nn.init.xavier_normal_(self.fc_Wo.weight)
+        nn.init.xavier_normal_(self.fc_Ws.weight)
+        nn.init.xavier_normal_(self.fc_Wc.weight)
 
     def init_hidden(self, batch_size):
         return torch.zeros((1, batch_size, self.hidden_size))
 
-    def reset(self, batch_size, lf_shape, hf_shape):
-        self.coverage_attn_low.reset_alpha(batch_size, lf_shape[2]*lf_shape[3])
-        self.coverage_attn_high.reset_alpha(batch_size, hf_shape[2]*hf_shape[3])
-
+    def reset(self, batch_size, feat_shape):
+        self.coverage_attn.reset_alpha(batch_size, feat_shape[2]*feat_shape[3])
+    
     # Unsqueeze and squeeze are used to add and remove the seq_len dimension,
     # which is always 1 since only the previous symbol is provided, not a sequence.
     # The inputs that are multiplied by the weights are transposed to get
     # (m x batch_size) instead of (batch_size x m). The result of the
     # multiplication is tranposed back.
-    def forward(self, x, hidden, low_res, high_res):
+    def forward(self, x, hidden, feature):
         embedded = self.embedding(x)
         pred, _ = self.gru1(embedded, hidden)
         # u_pred is computed here instead of in the coverage attention, because the
         # weight U_pred is shared and the coverage attention does not use pred for
         # anything else. This avoids computing it twice.
-        u_pred = torch.matmul(self.U_pred, pred.squeeze(1).t()).t()
-        context_low, low_attention = self.coverage_attn_low(low_res, u_pred)
-        context_high, high_attention  = self.coverage_attn_high(high_res, u_pred)
-        context = torch.cat((context_low, context_high), dim=1)
+        context, decoder_attention = self.coverage_attn(feature, pred)
         new_hidden, _ = self.gru2(context.unsqueeze(1), pred.transpose(0, 1))
-        w_s = torch.matmul(self.W_s, new_hidden.squeeze(1).t()).t()
-        w_c = torch.matmul(self.W_c, context.t()).t()
+        
+        w_s = self.fc_Ws(new_hidden.squeeze(1))
+        w_c = self.fc_Wc(context)
         out = embedded.squeeze(1) + w_s + w_c
         out = self.maxout(out)
-        out = torch.matmul(self.W_o, out.t()).t()
-        # return out, new_hidden.transpose(0, 1), low_attention, high_attention
-        return out, new_hidden.transpose(0, 1), high_attention
-
+        out = self.fc_Wo(out)
+        return out, new_hidden.transpose(0, 1), decoder_attention  

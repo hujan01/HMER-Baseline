@@ -1,16 +1,16 @@
 '''
-@Descripttion: 推断
+@Descripttion: 集束搜索
 @Version: 
 @Author: jianh
 @Email: 595495856@qq.com
 @Date: 2020-02-19 16:51:37
-@LastEditTime: 2020-04-22 15:20:48
+@LastEditTime: 2020-07-05 00:08:12
 '''
 
 import math 
 import os 
 import operator
-# os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import cv2
 from PIL import Image
@@ -31,6 +31,12 @@ from model import Encoder, Decoder
 from config import cfg
 
 torch.backends.cudnn.benchmark = False
+
+ignoreTxt = "validIgnore.txt"
+ignoreLs = []
+with open(ignoreTxt) as fr:
+    for l in fr.readlines():
+        ignoreLs.append(l.strip())
 
 class BeamSearchNode(object):
     def __init__(self, hiddenstate, previousNode, wordId, logProb, length):
@@ -83,20 +89,21 @@ decoder = Decoder(112)
 encoder = encoder.cuda()
 decoder = decoder.cuda()
 
-encoder.load_state_dict(torch.load('checkpoints/encoder_36p93.pkl'))
-decoder.load_state_dict(torch.load('checkpoints/attn_decoder_36p93.pkl'))
+encoder.load_state_dict(torch.load('checkpoints/encoder_47p53.pkl'))
+decoder.load_state_dict(torch.load('checkpoints/attn_decoder_47p53.pkl'))
 
 encoder.eval()
 decoder.eval()
 
 # 开始推断
-fw = open('result_.txt', 'w')
-
-testPath = "/home/hj/workspace/HMER/data/CROHME2016/test"
+fw = open('result_47p53_beam.txt', 'w')
+testPath = "/home/hj/workspace/HMER/data/CROHME2016/valid"
 maxlen = 70
 
 imgFiles = os.listdir(testPath)
 for imgName in imgFiles:
+    if os.path.splitext(imgName)[0]  in ignoreLs:
+        continue
     imgPath = os.path.join(testPath, imgName)
     img = cv2.imread(imgPath)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -143,6 +150,7 @@ for imgName in imgFiles:
                 break
             else:
                 continue
+            
         decoder_output, decoder_hidden, _ = decoder(decoder_input, decoder_hidden, low_feature, high_feature)
         output = F.log_softmax(decoder_output)
         log_prob, indexes = torch.topk(output, beam_width) # 返回元组

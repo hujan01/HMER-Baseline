@@ -4,7 +4,7 @@
 @Author: jianh
 @email: 595495856@qq.com
 @Date: 2020-02-19 16:51:51
-@LastEditTime: 2020-06-03 23:02:12
+LastEditTime: 2020-12-16 10:18:05
 '''
 import sys
 
@@ -50,8 +50,10 @@ def MERData(feature_file, label_file, dictionary, batch_size, batch_Imagesize, m
 
     feature_batch = []
     label_batch = []
+
     feature_total = []
     label_total = []
+    
     uidList = [] # 保存满足条件的图片名
 
     batch_image_size = 0 
@@ -59,6 +61,7 @@ def MERData(feature_file, label_file, dictionary, batch_size, batch_Imagesize, m
     i = 0
     # imageSize 根据图片尺寸大小key:label 保存在字典中
     # features uid: feature  targets uid: label
+    s = 0
     for uid, size in imageSize:
         if size > biggest_image_size: 
             biggest_image_size = size
@@ -69,10 +72,12 @@ def MERData(feature_file, label_file, dictionary, batch_size, batch_Imagesize, m
         # 这里会剔除一些不符合条件的图片
         if len(lab) > maxlen: # 公式最大长度限制
             # print('{} label_len: {}'.format(uid, len(lab)))
-            continue
+            s += 1
+            # continue
         elif size > maxImagesize: # 图像最大长度限制
             # print('{} size: {}'.format(uid, size))
-            continue
+            s += 1
+            # continue
         else:
             uidList.append(uid) 
             if batch_image_size > batch_Imagesize or i == batch_size:
@@ -91,7 +96,7 @@ def MERData(feature_file, label_file, dictionary, batch_size, batch_Imagesize, m
                 feature_batch.append(fea)
                 label_batch.append(lab)
                 i += 1
-
+    print(s)
     # 下面这两个是对应的
     feature_total.append(feature_batch)
     label_total.append(label_batch)
