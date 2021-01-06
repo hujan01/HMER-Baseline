@@ -4,11 +4,11 @@
 @Author: jianh
 @Email: 595495856@qq.com
 @Date: 2020-02-19 16:51:37
-LastEditTime: 2020-12-28 15:49:14
+LastEditTime: 2021-01-04 16:34:46
 '''
 import math
 import os 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import cv2
 from PIL import Image
@@ -26,7 +26,7 @@ from utils.util import get_all_dist, load_dict, custom_dset, collate_fn_double
 torch.backends.cudnn.benchmark = False
 
 # 配置参数
-valid_datasets = ['data/test.pkl', 'data/test2016.txt']
+valid_datasets = ['data/valid.pkl', 'data/label/test_caption_2014.txt']
 dictionaries = 'data/dictionary.txt'
 result_path = "results/recognition.txt"
 

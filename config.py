@@ -1,7 +1,7 @@
 '''
 @Author: your name
 @Date: 2020-01-06 15:08:07
-LastEditTime: 2020-12-28 15:35:28
+LastEditTime: 2021-01-05 09:43:41
 LastEditors: Please set LastEditors
 @Description: In User Settings Edit
 @FilePath: /HMER/config.py
@@ -10,8 +10,8 @@ LastEditors: Please set LastEditors
 class Config():  
     seed = 2020
     
-    datasets = ['data/train.pkl', 'data/train_caption.txt']
-    valid_datasets = ['data/valid.pkl', 'data/test_caption.txt']
+    datasets = ['data/train.pkl', 'data/label/train_caption.txt']
+    valid_datasets = ['data/valid.pkl', 'data/label/test_caption_2014.txt']
     dictionaries = 'data/dictionary.txt'
 
     batch_Imagesize = 500000
@@ -22,7 +22,7 @@ class Config():
     hidden_size = 256
     num_class = 112
 
-    num_epoch = 70
+    num_epoch = 60
     lr = 0.0001
     batch_size = 4
     batch_size_t = 4
