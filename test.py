@@ -4,7 +4,7 @@
 @Author: jianh
 @Email: 595495856@qq.com
 @Date: 2020-02-19 16:51:37
-LastEditTime: 2021-01-04 16:34:46
+LastEditTime: 2021-01-12 14:03:47
 '''
 import math
 import os 
@@ -31,7 +31,7 @@ dictionaries = 'data/dictionary.txt'
 result_path = "results/recognition.txt"
 
 Imagesize = 500000
-batch_size_t = 1
+batch_size_t = 4
 maxlen = 70
 maxImagesize = 100000
 hidden_size = 256
@@ -63,8 +63,8 @@ decoder = Decoder(112)
 encoder = encoder.cuda()
 decoder = decoder.cuda()
 
-encoder.load_state_dict(torch.load('checkpoints/encoder_47p21.pkl'))
-decoder.load_state_dict(torch.load('checkpoints/attn_decoder_47p21.pkl'))
+encoder.load_state_dict(torch.load('checkpoints/encoder_baseline.pkl'))
+decoder.load_state_dict(torch.load('checkpoints/attn_decoder_baseline.pkl'))
 
 encoder.eval()
 decoder.eval()
@@ -79,6 +79,9 @@ error1, error2, error3 = 0, 0, 0
 fw = open(result_path, 'w') # 保存识别结果
 # 2. 开始评估
 for step_t, (x_t, y_t, uid) in enumerate(test_loader): 
+    # abandon <batch data
+    if x_t.size()[0]<cfg.batch_size_t:
+        break
     x_t = x_t.cuda()
     y_t = y_t.cuda()
     feat_t = encoder(x_t) # (bs, c, h, w) c=684
@@ -111,7 +114,7 @@ for step_t, (x_t, y_t, uid) in enumerate(test_loader):
         decoder_input_t = decoder_input_t.view(batch_size_t, 1)
         
         # prediction
-        prediction[:, i] = decoder_input_t
+        prediction[:, i] = decoder_input_t.flatten()
 
     for i in range(batch_size_t):
         for j in range(maxlen):

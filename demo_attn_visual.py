@@ -4,7 +4,7 @@
 @Author: jianh
 @Email: 595495856@qq.com
 @Date: 2020-02-19 16:51:37
-LastEditTime: 2020-12-29 13:16:55
+LastEditTime: 2021-01-08 17:44:22
 '''
 import math
 import os 
@@ -28,10 +28,10 @@ from utils.util import get_all_dist, load_dict, custom_dset, collate_fn_double, 
 torch.backends.cudnn.benchmark = False
 
 # 配置参数
-valid_datasets = ['data/test.pkl', 'data/test2016.txt']
+valid_datasets = ['data/test.pkl', 'data/label/test_caption_2016.txt']
 dictionaries = 'data/dictionary.txt'
-demo_path = "data/demo"
-img_name = "23_em_64.bmp"
+demo_path = "examples"
+img_name = "18_em_0.bmp"
 
 Imagesize = 500000
 bs = 1

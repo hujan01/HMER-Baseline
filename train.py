@@ -3,14 +3,14 @@ Author: sigmoid
 Description: 
 Email: 595495856@qq.com
 Date: 2020-06-01 20:45:44
-LastEditTime: 2021-01-05 09:47:08
+LastEditTime: 2021-01-12 13:54:45
 '''
 
 import math, time
 import random
 import os   
 from datetime import datetime
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -96,8 +96,8 @@ decoder = decoder.cuda()
 criterion = nn.CrossEntropyLoss().cuda()
 encoder_optimizer = optim.SGD(encoder.parameters(), lr=cfg.lr, momentum=0.9, weight_decay=10e-3)
 decoder_optimizer = optim.SGD(decoder.parameters(), lr=cfg.lr, momentum=0.9, weight_decay=10e-3)
-scheduler_encoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [30, 40, 50], gamma=0.5)
-scheduler_decoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [30, 40, 50], gamma=0.5)
+scheduler_encoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [30, 50, 60], gamma=0.5)
+scheduler_decoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [30, 50, 60], gamma=0.5)
 
 for epoch in range(1, cfg.num_epoch+1):
     ud_epoch = time.time()
@@ -214,9 +214,7 @@ for epoch in range(1, cfg.num_epoch+1):
         x_real_high = x_t.size()[2]
         x_real_width = x_t.size()[3]
 
-        # abandon <batch data
-        if x_t.size()[0]<cfg.batch_size_t:
-            break
+
 
         print('testing for %.3f%%'%(step_t*100*cfg.batch_size_t/len_test), end='\r')
         
@@ -287,8 +285,8 @@ for epoch in range(1, cfg.num_epoch+1):
         best_wer = wer
         print('currect ExpRate:{}'.format(exprate))
         print("saving the model....")
-        torch.save(encoder.state_dict(), 'checkpoints/encoder_baseline1.pkl')
-        torch.save(decoder.state_dict(), 'checkpoints/attn_decoder_baseline1.pkl')
+        torch.save(encoder.state_dict(), 'checkpoints/encoder_coverage.pkl')
+        torch.save(decoder.state_dict(), 'checkpoints/attn_decoder_coverage.pkl')
         print("done")
     else:
         print('the best is %f' % (exprate))
