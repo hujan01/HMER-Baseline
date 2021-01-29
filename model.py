@@ -3,7 +3,11 @@ Author: sigmoid
 Description: 
 Email: 595495856@qq.com
 Date: 2020-12-18 13:04:36
+<<<<<<< HEAD
 LastEditTime: 2021-01-04 16:32:13
+=======
+LastEditTime: 2021-01-24 08:15:01
+>>>>>>> 2e772059942dfc6887a69178317c582a45555fc4
 '''
 import torch
 import torch.nn as nn
@@ -191,7 +195,7 @@ class Encoder(nn.Module):
         )
 
         num_features = num_features + depth * growth_rate
-        self.cbam1 = Cbam(num_features)
+        # self.cbam1 = Cbam(num_features)
         self.trans1 = TransitionBlock(num_features, num_features // 2)
         num_features = num_features // 2
         self.block2 = DenseBlock(
@@ -202,7 +206,7 @@ class Encoder(nn.Module):
         )
 
         num_features = num_features + depth * growth_rate
-        self.cbam2 = Cbam(num_features)
+        # self.cbam2 = Cbam(num_features)
         self.trans2 = TransitionBlock(num_features, num_features // 2)
 
         num_features = num_features // 2
@@ -226,6 +230,8 @@ class Encoder(nn.Module):
         out = self.block3(out)
         return out
 
+class ClassicAttention(nn.Module):
+    pass
 class CoverageAttention(nn.Module):
     """Coverage attention
     The coverage attention is a multi-layer perceptron, which takes encoded annotations

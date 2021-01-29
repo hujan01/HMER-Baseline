@@ -3,7 +3,11 @@ Author: sigmoid
 Description: 
 Email: 595495856@qq.com
 Date: 2020-06-01 20:45:44
+<<<<<<< HEAD
 LastEditTime: 2021-01-06 21:50:23
+=======
+LastEditTime: 2021-01-29 16:38:16
+>>>>>>> 2e772059942dfc6887a69178317c582a45555fc4
 '''
 
 import math, time
@@ -24,6 +28,7 @@ from torch import optim
 from tensorboardX import SummaryWriter
 
 from model import Encoder, Decoder
+
 from dataset import MERData
 from config import cfg  
 from utils.util import collate_fn_double, custom_dset, cmp_result, load_dict
@@ -40,6 +45,8 @@ TIMESTAMP = "{0:%Y-%m-%dT%H-%M/}".format(datetime.now())
 logdir = 'logs/' + TIMESTAMP
 # log
 writer = SummaryWriter(logdir)
+
+logs = open("logs/loss_newdata.txt", 'w')
 
 # load dictionary
 worddicts = load_dict(cfg.dictionaries)
@@ -84,9 +91,9 @@ encoder = Encoder(img_channels=2)
 decoder = Decoder(cfg.num_class)
 
 # load pre-train
-# encoder_dict = torch.load('checkpoints/encoder_47p42.pkl')
+# encoder_dict = torch.load('checkpoints/encoder_coverage.pkl')
 # encoder.load_state_dict(encoder_dict)
-# decoder_dict = torch.load('checkpoints/attn_decoder_47p42.pkl')
+# decoder_dict = torch.load('checkpoints/attn_decoder_coverage.pkl')
 # decoder.load_state_dict(decoder_dict)
 
 encoder = encoder.cuda()
@@ -96,8 +103,8 @@ decoder = decoder.cuda()
 criterion = nn.CrossEntropyLoss().cuda()
 encoder_optimizer = optim.SGD(encoder.parameters(), lr=cfg.lr, momentum=0.9, weight_decay=10e-3)
 decoder_optimizer = optim.SGD(decoder.parameters(), lr=cfg.lr, momentum=0.9, weight_decay=10e-3)
-scheduler_encoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [30, 40, 50], gamma=0.5)
-scheduler_decoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [30, 40, 50], gamma=0.5)
+scheduler_encoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [30, 50, 60], gamma=1)
+scheduler_decoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [30, 50, 60], gamma=1)
 
 for epoch in range(1, cfg.num_epoch+1):
     ud_epoch = time.time()
@@ -129,7 +136,9 @@ for epoch in range(1, cfg.num_epoch+1):
         loss = 0
 
         # whether use tf 
-        use_teacher_forcing = True if random.random() < cfg.teacher_forcing_ratio else False 
+        use_teacher_forcing = True if random.random() < cfg.teacher_forcing_ratio else False
+        # use_teacher_forcing = True
+        # use_teacher_forcing = False
         flag_z = [0]*cfg.batch_size
         
         if use_teacher_forcing:
@@ -194,6 +203,7 @@ for epoch in range(1, cfg.num_epoch+1):
 
     loss_all_out = whole_loss / len_train
     writer.add_scalar('loss', loss_all_out, epoch)
+    logs.write(str(loss_all_out)+'\t')
     ud_epoch = (time.time()-ud_epoch)/60
     print("epoch is %d, the whole loss is %f" % (epoch, loss_all_out))
     print("epoch cost time...", ud_epoch)
@@ -211,12 +221,10 @@ for epoch in range(1, cfg.num_epoch+1):
     print('Now, begin testing!!')
 
     for step_t, (x_t, y_t, _) in enumerate(test_loader):
+        if x_t.size()[0] < cfg.batch_size:  
+            break
         x_real_high = x_t.size()[2]
         x_real_width = x_t.size()[3]
-
-        # abandon <batch data
-        if x_t.size()[0]<cfg.batch_size_t:
-            break
 
         print('testing for %.3f%%'%(step_t*100*cfg.batch_size_t/len_test), end='\r')
         
@@ -287,8 +295,8 @@ for epoch in range(1, cfg.num_epoch+1):
         best_wer = wer
         print('currect ExpRate:{}'.format(exprate))
         print("saving the model....")
-        torch.save(encoder.state_dict(), 'checkpoints/encoder_baseline1.pkl')
-        torch.save(decoder.state_dict(), 'checkpoints/attn_decoder_baseline1.pkl')
+        torch.save(encoder.state_dict(), 'checkpoints/encoder_coverage_newdata.pkl')
+        torch.save(decoder.state_dict(), 'checkpoints/attn_decoder_coverage_newdata.pkl')
         print("done")
     else:
         print('the best is %f' % (exprate))
@@ -296,4 +304,4 @@ for epoch in range(1, cfg.num_epoch+1):
         print('the loss is bigger than before,so do not save the model')
 
 writer.close()
-
+logs.close()
