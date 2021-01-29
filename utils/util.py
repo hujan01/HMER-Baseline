@@ -3,7 +3,7 @@ Author: sigmoid
 Description: 
 Email: 595495856@qq.com
 Date: 2020-12-13 19:51:52
-LastEditTime: 2020-12-29 13:34:44
+LastEditTime: 2021-01-15 17:42:22
 '''
 import numpy as np
 import matplotlib.cm as cm
@@ -178,6 +178,7 @@ def load_dict(dictFile):
 def show_attention_images(img, preds, attn, attn_h, attn_w, smooth=False):
     w, h = img.size
     attn = attn.squeeze(0)
+    preds = ['<sos>']+preds
     for i, (pred, a) in enumerate(zip(preds, attn)):
         fig, ax = plt.subplots(1, 1)
         # Resize attentions from flat to 2D (L = H x W)
@@ -194,7 +195,7 @@ def show_attention_images(img, preds, attn, attn_h, attn_w, smooth=False):
         )
         attn_img = ax.imshow(attn_mask, 'gray', alpha=0.3)
         # attn_img.set_cmap(cm.Greys)
-        ax.text(1.03, 0.5, "{:>5}".format(pred), transform=ax.transAxes, fontsize=15)
+        ax.text(1.05, 0.5, "{:>5}".format(pred), transform=ax.transAxes, fontsize=15)
         plt.savefig("results/filename_%d.png"%(i))
         print("save %d symbol attention image"%(i))
         plt.show()

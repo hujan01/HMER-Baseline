@@ -4,7 +4,7 @@
 @Author: jianh
 @Email: 595495856@qq.com
 @Date: 2020-02-19 16:51:37
-LastEditTime: 2021-01-08 17:44:22
+LastEditTime: 2021-01-15 17:41:25
 '''
 import math
 import os 
@@ -31,7 +31,7 @@ torch.backends.cudnn.benchmark = False
 valid_datasets = ['data/test.pkl', 'data/label/test_caption_2016.txt']
 dictionaries = 'data/dictionary.txt'
 demo_path = "examples"
-img_name = "18_em_0.bmp"
+img_name = "18_em_1.bmp"
 
 Imagesize = 500000
 bs = 1

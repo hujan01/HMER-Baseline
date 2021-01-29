@@ -4,11 +4,11 @@
 @Author: jianh
 @Email: 595495856@qq.com
 @Date: 2020-02-19 16:51:37
-LastEditTime: 2021-01-12 14:03:47
+LastEditTime: 2021-01-20 15:21:36
 '''
 import math
 import os 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 import cv2
 from PIL import Image
@@ -63,8 +63,8 @@ decoder = Decoder(112)
 encoder = encoder.cuda()
 decoder = decoder.cuda()
 
-encoder.load_state_dict(torch.load('checkpoints/encoder_baseline.pkl'))
-decoder.load_state_dict(torch.load('checkpoints/attn_decoder_baseline.pkl'))
+encoder.load_state_dict(torch.load('checkpoints/encoder_47p21.pkl'))
+decoder.load_state_dict(torch.load('checkpoints/attn_decoder_47p21.pkl'))
 
 encoder.eval()
 decoder.eval()
