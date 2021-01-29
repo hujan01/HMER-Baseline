@@ -3,14 +3,14 @@ Author: sigmoid
 Description: 
 Email: 595495856@qq.com
 Date: 2020-06-01 20:45:44
-LastEditTime: 2021-01-02 22:19:57
+LastEditTime: 2021-01-06 21:50:23
 '''
 
 import math, time
 import random
 import os   
 from datetime import datetime
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -96,8 +96,8 @@ decoder = decoder.cuda()
 criterion = nn.CrossEntropyLoss().cuda()
 encoder_optimizer = optim.SGD(encoder.parameters(), lr=cfg.lr, momentum=0.9, weight_decay=10e-3)
 decoder_optimizer = optim.SGD(decoder.parameters(), lr=cfg.lr, momentum=0.9, weight_decay=10e-3)
-scheduler_encoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [27, 50], gamma=0.5)
-scheduler_decoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [27, 50], gamma=0.5)
+scheduler_encoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [30, 40, 50], gamma=0.5)
+scheduler_decoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [30, 40, 50], gamma=0.5)
 
 for epoch in range(1, cfg.num_epoch+1):
     ud_epoch = time.time()
@@ -287,8 +287,8 @@ for epoch in range(1, cfg.num_epoch+1):
         best_wer = wer
         print('currect ExpRate:{}'.format(exprate))
         print("saving the model....")
-        torch.save(encoder.state_dict(), 'checkpoints/encoder_base.pkl')
-        torch.save(decoder.state_dict(), 'checkpoints/attn_decoder_base.pkl')
+        torch.save(encoder.state_dict(), 'checkpoints/encoder_baseline1.pkl')
+        torch.save(decoder.state_dict(), 'checkpoints/attn_decoder_baseline1.pkl')
         print("done")
     else:
         print('the best is %f' % (exprate))

@@ -4,11 +4,11 @@
 @Author: jianh
 @Email: 595495856@qq.com
 @Date: 2020-02-19 16:51:37
-LastEditTime: 2021-01-04 16:32:03
+LastEditTime: 2021-01-04 16:34:46
 '''
 import math
 import os 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import cv2
 from PIL import Image

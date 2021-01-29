@@ -3,14 +3,18 @@ Author: sigmoid
 Description: 
 Email: 595495856@qq.com
 Date: 2020-12-13 19:51:52
-LastEditTime: 2020-12-28 15:24:59
+LastEditTime: 2020-12-29 13:34:44
 '''
 import numpy as np
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+from skimage import transform
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
 import torch.utils.data as data
+import torchvision.transforms as transforms
 from torch import optim
 
 class custom_dset(data.Dataset):
@@ -170,3 +174,28 @@ def load_dict(dictFile):
         lexicon[w[0]] = int(w[1])
     print('total words/phones', len(lexicon))
     return lexicon
+
+def show_attention_images(img, preds, attn, attn_h, attn_w, smooth=False):
+    w, h = img.size
+    attn = attn.squeeze(0)
+    for i, (pred, a) in enumerate(zip(preds, attn)):
+        fig, ax = plt.subplots(1, 1)
+        # Resize attentions from flat to 2D (L = H x W)
+        a_2d = a.view(attn_h, attn_w)
+        a_2d = a_2d.detach().cpu().numpy()
+        upscale_factor = max(h // attn_h, w // attn_w)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.imshow(img, 'gray')
+        attn_mask = (
+            transform.pyramid_expand(a_2d, upscale=upscale_factor, multichannel=False)
+            if smooth
+            else transform.resize(a_2d, (h, w), mode="reflect", anti_aliasing=True)
+        )
+        attn_img = ax.imshow(attn_mask, 'gray', alpha=0.3)
+        # attn_img.set_cmap(cm.Greys)
+        ax.text(1.03, 0.5, "{:>5}".format(pred), transform=ax.transAxes, fontsize=15)
+        plt.savefig("results/filename_%d.png"%(i))
+        print("save %d symbol attention image"%(i))
+        plt.show()
+        plt.close()

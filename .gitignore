@@ -1,5 +1,5 @@
-logs
 .vscode
 __pycache__
-data
 checkpoints
+data
+logs
