@@ -3,7 +3,7 @@ Author: sigmoid
 Description: 
 Email: 595495856@qq.com
 Date: 2020-06-01 20:45:44
-LastEditTime: 2021-01-29 16:38:16
+LastEditTime: 2021-01-29 19:15:24
 '''
 
 import math, time
@@ -39,6 +39,7 @@ best_wer = 2**31
 
 TIMESTAMP = "{0:%Y-%m-%dT%H-%M/}".format(datetime.now())
 logdir = 'logs/' + TIMESTAMP
+
 # log
 writer = SummaryWriter(logdir)
 
@@ -87,10 +88,10 @@ encoder = Encoder(img_channels=2)
 decoder = Decoder(cfg.num_class)
 
 # load pre-train
-# encoder_dict = torch.load('checkpoints/encoder_coverage.pkl')
-# encoder.load_state_dict(encoder_dict)
-# decoder_dict = torch.load('checkpoints/attn_decoder_coverage.pkl')
-# decoder.load_state_dict(decoder_dict)
+encoder_dict = torch.load('checkpoints/encoder_pre.pkl')
+encoder.load_state_dict(encoder_dict)
+decoder_dict = torch.load('checkpoints/attn_decoder_coverage_pre.pkl')
+decoder.load_state_dict(decoder_dict)
 
 encoder = encoder.cuda()
 decoder = decoder.cuda()
@@ -99,8 +100,8 @@ decoder = decoder.cuda()
 criterion = nn.CrossEntropyLoss().cuda()
 encoder_optimizer = optim.SGD(encoder.parameters(), lr=cfg.lr, momentum=0.9, weight_decay=10e-3)
 decoder_optimizer = optim.SGD(decoder.parameters(), lr=cfg.lr, momentum=0.9, weight_decay=10e-3)
-scheduler_encoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [30, 50, 60], gamma=1)
-scheduler_decoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [30, 50, 60], gamma=1)
+scheduler_encoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [20, 30], gamma=0.5)
+scheduler_decoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [20, 30], gamma=0.5)
 
 for epoch in range(1, cfg.num_epoch+1):
     ud_epoch = time.time()
