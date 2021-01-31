@@ -3,7 +3,7 @@ Author: sigmoid
 Description: 
 Email: 595495856@qq.com
 Date: 2020-06-01 20:45:44
-LastEditTime: 2021-01-30 23:48:58
+LastEditTime: 2021-01-31 16:04:39
 '''
 
 import math, time
@@ -39,6 +39,7 @@ best_wer = 2**31
 
 TIMESTAMP = "{0:%Y-%m-%dT%H-%M/}".format(datetime.now())
 logdir = 'logs/' + TIMESTAMP
+
 # log
 writer = SummaryWriter(logdir)
 
@@ -87,10 +88,10 @@ encoder = Encoder(img_channels=2)
 decoder = Decoder(cfg.num_class)
 
 # load pre-train
-# encoder_dict = torch.load('checkpoints/encoder_coverage.pkl')
-# encoder.load_state_dict(encoder_dict)
-# decoder_dict = torch.load('checkpoints/attn_decoder_coverage.pkl')
-# decoder.load_state_dict(decoder_dict)
+encoder_dict = torch.load('checkpoints/encoder_pre.pkl')
+encoder.load_state_dict(encoder_dict)
+decoder_dict = torch.load('checkpoints/attn_decoder_coverage_pre.pkl')
+decoder.load_state_dict(decoder_dict)
 
 encoder = encoder.cuda()
 decoder = decoder.cuda()
