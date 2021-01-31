@@ -4,7 +4,7 @@
 @Author: jianh
 @Email: 595495856@qq.com
 @Date: 2020-02-19 16:51:37
-LastEditTime: 2021-01-20 15:21:36
+LastEditTime: 2021-01-31 15:58:49
 '''
 import math
 import os 
@@ -46,7 +46,7 @@ test, test_label, uidList = MERData(
                                 valid_datasets[0], valid_datasets[1], worddicts, batch_size=1,
                                 batch_Imagesize=Imagesize, maxlen=maxlen, maxImagesize=maxImagesize)
 
-image_test = custom_dset(test, test_label, uidList)
+image_test = custom_dset(test, test_label)
 
 test_loader = torch.utils.data.DataLoader(
     dataset = image_test,
@@ -63,8 +63,8 @@ decoder = Decoder(112)
 encoder = encoder.cuda()
 decoder = decoder.cuda()
 
-encoder.load_state_dict(torch.load('checkpoints/encoder_base.pkl'))
-decoder.load_state_dict(torch.load('checkpoints/attn_decoder_base.pkl'))
+encoder.load_state_dict(torch.load('checkpoints/encoder_47p21.pkl'))
+decoder.load_state_dict(torch.load('checkpoints/attn_decoder_47p21.pkl'))
 
 encoder.eval()
 decoder.eval()
@@ -78,7 +78,7 @@ error1, error2, error3 = 0, 0, 0
 
 fw = open(result_path, 'w') # 保存识别结果
 # 2. 开始评估
-for step_t, (x_t, y_t, uid) in enumerate(test_loader): 
+for step_t, (x_t, y_t, batch_list) in enumerate(test_loader): 
     # abandon <batch data
     if x_t.size()[0]<cfg.batch_size_t:
         break
@@ -117,6 +117,7 @@ for step_t, (x_t, y_t, uid) in enumerate(test_loader):
         prediction[:, i] = decoder_input_t.flatten()
 
     for i in range(batch_size_t):
+        uid = uidList[batch_list[i]]
         for j in range(maxlen):
             if int(prediction[i][j]) == 0:
                 break

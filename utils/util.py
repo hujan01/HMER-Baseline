@@ -3,7 +3,7 @@ Author: sigmoid
 Description: 
 Email: 595495856@qq.com
 Date: 2020-12-13 19:51:52
-LastEditTime: 2021-01-15 17:42:22
+LastEditTime: 2021-01-31 15:58:08
 '''
 import numpy as np
 import matplotlib.cm as cm
@@ -19,19 +19,17 @@ from torch import optim
 
 class custom_dset(data.Dataset):
     """ 格式化数据 """
-    def __init__(self, train, train_label, uidList):
+    def __init__(self, train, train_label):
         self.train = train
         self.train_label = train_label
-        self.uidList = uidList
     def __getitem__(self, index):
         train_setting = torch.from_numpy(np.array(self.train[index]))
         label_setting = torch.from_numpy(np.array(self.train_label[index])).type(torch.LongTensor)
-        uid_setting   = self.uidList[index]
 
         size = train_setting.size()
         train_setting = train_setting.view(1, size[2], size[3])
         label_setting = label_setting.view(-1)
-        return train_setting, label_setting, uid_setting
+        return train_setting, label_setting, index
     def __len__(self):
         return len(self.train)
         
@@ -132,8 +130,9 @@ def collate_fn_double(batch):
             label_padding = torch.cat((label_padding,ii1_padding),dim=0)
         k1 = k1+1
 
+        
     img_padding_mask = img_padding_mask/255.0
-    return img_padding_mask, label_padding, uid[0]
+    return img_padding_mask, label_padding, uid
 
 def cmp_result(label, rec):
     """ 编辑距离 """
