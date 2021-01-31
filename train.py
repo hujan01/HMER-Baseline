@@ -3,18 +3,14 @@ Author: sigmoid
 Description: 
 Email: 595495856@qq.com
 Date: 2020-06-01 20:45:44
-<<<<<<< HEAD
-LastEditTime: 2021-01-06 21:50:23
-=======
-LastEditTime: 2021-01-29 16:38:16
->>>>>>> 2e772059942dfc6887a69178317c582a45555fc4
+LastEditTime: 2021-01-30 23:48:58
 '''
 
 import math, time
 import random
 import os   
 from datetime import datetime
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -103,8 +99,8 @@ decoder = decoder.cuda()
 criterion = nn.CrossEntropyLoss().cuda()
 encoder_optimizer = optim.SGD(encoder.parameters(), lr=cfg.lr, momentum=0.9, weight_decay=10e-3)
 decoder_optimizer = optim.SGD(decoder.parameters(), lr=cfg.lr, momentum=0.9, weight_decay=10e-3)
-scheduler_encoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [30, 50, 60], gamma=1)
-scheduler_decoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [30, 50, 60], gamma=1)
+scheduler_encoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [30, 50, 60], gamma=0.5)
+scheduler_decoder = optim.lr_scheduler.MultiStepLR(encoder_optimizer, [30, 50, 60], gamma=0.5)
 
 for epoch in range(1, cfg.num_epoch+1):
     ud_epoch = time.time()
@@ -126,7 +122,7 @@ for epoch in range(1, cfg.num_epoch+1):
         feat = encoder(x)
         
         # ----decoder----
-        decoder_input = torch.LongTensor([111]*cfg.batch_size).view(-1, 1).cuda()       
+        decoder_input = torch.LongTensor([108]*cfg.batch_size).view(-1, 1).cuda()       
         decoder_hidden = decoder.init_hidden(cfg.batch_size).cuda()
         
         # reset coverage
@@ -233,7 +229,7 @@ for epoch in range(1, cfg.num_epoch+1):
         
         feat_t = encoder(x_t)
         # init input
-        decoder_input_t = torch.LongTensor([111]*cfg.batch_size_t).view(-1, 1).cuda()
+        decoder_input_t = torch.LongTensor([108]*cfg.batch_size_t).view(-1, 1).cuda()
         decoder_hidden_t = decoder.init_hidden(cfg.batch_size_t).cuda()     
         # reset coverage  
         decoder.reset(cfg.batch_size_t, feat_t.size())
@@ -295,8 +291,8 @@ for epoch in range(1, cfg.num_epoch+1):
         best_wer = wer
         print('currect ExpRate:{}'.format(exprate))
         print("saving the model....")
-        torch.save(encoder.state_dict(), 'checkpoints/encoder_coverage_newdata.pkl')
-        torch.save(decoder.state_dict(), 'checkpoints/attn_decoder_coverage_newdata.pkl')
+        torch.save(encoder.state_dict(), 'checkpoints/encoder_coverage_normal.pkl')
+        torch.save(decoder.state_dict(), 'checkpoints/attn_decoder_coverage_normal.pkl')
         print("done")
     else:
         print('the best is %f' % (exprate))
